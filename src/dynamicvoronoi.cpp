@@ -63,14 +63,13 @@ void DynamicVoronoi::initializeMap(int _sizeX, int _sizeY, bool** _gridMap) {
   gridMap = _gridMap;
   initializeEmpty(_sizeX, _sizeY, false);
 
-  for (int x=0; x<sizeX; x++) {
+  for (int x=0; x<sizeX; x++) {      // 访问所有元素
     for (int y=0; y<sizeY; y++) {
-      if (gridMap[x][y]) {
+      if (gridMap[x][y]) {    // 判断是否被占据
         dataCell c = data[x][y];
-        if (!isOccupied(x,y,c)) {
-          
-          bool isSurrounded = true;
-          for (int dx=-1; dx<=1; dx++) {
+        if (!isOccupied(x,y,c)) { // 如果最近障碍物不是其本身，则判断是否被障碍物包围
+          bool isSurrounded = true; // 包围标识，初始true
+          for (int dx=-1; dx<=1; dx++) {  // 访问周围8个元素
             int nx = x+dx;
             if (nx<=0 || nx>=sizeX-1) continue;
             for (int dy=-1; dy<=1; dy++) {
@@ -78,21 +77,23 @@ void DynamicVoronoi::initializeMap(int _sizeX, int _sizeY, bool** _gridMap) {
               int ny = y+dy;
               if (ny<=0 || ny>=sizeY-1) continue;
 
-              if (!gridMap[nx][ny]) {
+              if (!gridMap[nx][ny]) {  // 如果周围8个元素有一个没有占据，则表示灭有被包围
                 isSurrounded = false;
                 break;
               }
             }
           }
-          if (isSurrounded) {
-            c.obstX = x;
+          if (isSurrounded) { // 如果被包围，更新该点data
+            c.obstX = x;  // 最近障碍物设成其本身
             c.obstY = y;
             c.sqdist = 0;
-            c.dist=0;
+            c.dist=0;    // 离障碍物最近距离0
             c.voronoi=occupied;
             c.queueing = fwProcessed;
             data[x][y] = c;
-          } else setObstacle(x,y);
+          } else {
+            setObstacle(x,y); // 将该点设置成障碍物
+          }
         }
       }
     }
@@ -108,9 +109,10 @@ void DynamicVoronoi::clearCell(int x, int y) {
   removeObstacle(x,y);
 }
 
+// 将其data的最近障碍物坐标设置成其本身
 void DynamicVoronoi::setObstacle(int x, int y) {
   dataCell c = data[x][y];
-  if(isOccupied(x,y,c)) return;
+  if(isOccupied(x,y,c)) return; // 
   
   addList.push_back(INTPOINT(x,y));
   c.obstX = x;
